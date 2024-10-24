@@ -1,4 +1,5 @@
 from threading import Thread
+import gpiozero
 
 class IOEngine:
     def __init__(self):
@@ -9,7 +10,8 @@ class IOEngine:
         T.start()
     
     def __reading_input__(self, pin: int, func):
+        i_in = gpiozero.Button(pin)
         while True:
-            if pin: # TODO : pin input logic
+            if i_in.is_pressed:
                 try: func()
                 except: pass
