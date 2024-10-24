@@ -20,10 +20,11 @@ background_listen = True
 
 def main():
     ioe.register_input(REQUEST_PIN, hold_lim)
-    ioe.register_input(SOS_PIN, sos)
 
     lim_thread = Thread(target=background_lim)
     lim_thread.start()
+
+    de.detect(0, detect_handler)
 
 
 def background_lim():
@@ -61,10 +62,6 @@ def hold_lim():
     background_listen = True
 
 
-def sos():
-    pass
-
-
 def lim_request(request: str):
         print("REQUEST:", request)
         result = le.request(request)
@@ -78,6 +75,10 @@ def lim_request(request: str):
         print("RESULT:", result)
         tts.speak(result)
         print()
+
+
+def detect_handler(frame, result):
+    pass
 
 
 if __name__ == "__main__":
