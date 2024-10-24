@@ -1,10 +1,15 @@
 import requests, vlc, yt_dlp, time
 from datetime import datetime
 from threading import Thread
+from .IOEngine import IOEngine
+from .MessageEngine import MessageEngine
 
 class InterpretEngine:
-    def __init__(self, openweather_api: str):
+    def __init__(self, io_manager: IOEngine, message_manger: MessageEngine, button_pin: int, openweather_api: str):
+        self.message_manger = message_manger
         self.openweather_api = openweather_api
+
+        io_manager.register_input(button_pin, self.__stop_music__)
 
     def timer(self, second: int) -> str:
         if second > 60:
@@ -15,10 +20,10 @@ class InterpretEngine:
             text = f"{second}초"
         T = Thread(target=self.__alloc_timer__, args=(second,))
         T.start()
-        return f"{text}... 시작합니다."
+        return f"{text} 타이머를 시작할게요."
 
     def __alloc_timer__(self, second: int) -> str:
-        time.sleep(second)
+        time.sleep(second + 1)
         player = vlc.MediaPlayer("res/ringing.mp3")
         player.play()
 
@@ -35,7 +40,7 @@ class InterpretEngine:
         location_data = location_response.json()
         
         if location_data['status'] != 'success':
-            return "위치 정보를 가져오는 데 실패했습니다."
+            return "위치 정보를 가져오는 데 실패했어요."
 
         latitude = location_data['lat']
         longitude = location_data['lon']
@@ -46,12 +51,12 @@ class InterpretEngine:
         weather_data = weather_response.json()
 
         if weather_data.get('cod') != 200:
-            return "날씨 정보를 가져오는 데 실패했습니다."
+            return "날씨 정보를 가져오는 데 실패했어요."
 
         temperature = weather_data['main']['temp']
         description = weather_data['weather'][0]['description']
         
-        return f"현재 {city}의 날씨는 {description}이며, 기온은 섭씨 {round(temperature, 1)}도 이에요."
+        return f"현재 {city}의 날씨는 {description}이며, 섭씨 {round(temperature, 1)}도 이에요."
 
     def music(self, name: str):
         T = Thread(target=self.__play_music__, args=(name,))
@@ -79,3 +84,6 @@ class InterpretEngine:
 
     def __stop_music__(self):
         self.player.stop()
+
+    def send_message(self, to: str, message: str):
+        return self.message_manger.raw_message(to, { "content" : message })
